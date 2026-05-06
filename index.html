@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Stream Image Widget</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      overflow: hidden;
+    }
+
+    #container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    img {
+      max-width: 100%;
+      max-height: 100%;
+      transition: all 0.3s ease;
+    }
+
+    /* АНИМАЦИИ */
+
+    .glow {
+      animation: glow 2s infinite alternate;
+    }
+
+    @keyframes glow {
+      from { filter: drop-shadow(0 0 5px white); }
+      to { filter: drop-shadow(0 0 25px white); }
+    }
+
+    .pulse {
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .hue {
+      animation: hue 4s linear infinite;
+    }
+
+    @keyframes hue {
+      from { filter: hue-rotate(0deg); }
+      to { filter: hue-rotate(360deg); }
+    }
+
+    .float {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* UI */
+    #controls {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.5);
+      padding: 10px;
+      border-radius: 10px;
+      color: white;
+      font-family: sans-serif;
+    }
+
+    button {
+      margin: 3px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="container">
+  <img id="img" src="" />
+</div>
+
+<div id="controls">
+  <input type="file" id="file" />
+  <button onclick="upload()">Загрузить</button>
+  <br><br>
+
+  <button onclick="setEffect('')">Без эффекта</button>
+  <button onclick="setEffect('glow')">Glow</button>
+  <button onclick="setEffect('pulse')">Pulse</button>
+  <button onclick="setEffect('hue')">RGB</button>
+  <button onclick="setEffect('float')">Float</button>
+
+  <br><br>
+  <input id="url" placeholder="Ссылка появится тут" style="width:250px"/>
+</div>
+
+<script type="module">
+  // Firebase
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDuxR5hsWmfIWrjgrsU4zVEnIVppUZxNNU",
+    authDomain: "tt-widget-88711.firebaseapp.com",
+    databaseURL: "https://tt-widget-88711-default-rtdb.firebaseio.com",
+    projectId: "tt-widget-88711",
+    storageBucket: "tt-widget-88711.firebasestorage.app",
+    messagingSenderId: "997435022478",
+    appId: "1:997435022478:web:a0ad462f2a7dd074d27ddf"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const storage = getStorage(app);
+
+  const img = document.getElementById("img");
+  const fileInput = document.getElementById("file");
+  const urlInput = document.getElementById("url");
+
+  window.upload = async () => {
+    const file = fileInput.files[0];
+    if (!file) return alert("Выбери файл");
+
+    const storageRef = ref(storage, 'images/' + Date.now() + '_' + file.name);
+
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+
+    img.src = url;
+    urlInput.value = url;
+
+    console.log("URL:", url);
+  };
+
+  window.setEffect = (effect) => {
+    img.className = effect;
+  };
+
+  // если открыть с параметром ?img=...
+  const params = new URLSearchParams(window.location.search);
+  const imageUrl = params.get("img");
+
+  if (imageUrl) {
+    img.src = imageUrl;
+    document.getElementById("controls").style.display = "none";
+  }
+</script>
+
+</body>
+</html>
